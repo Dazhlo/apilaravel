@@ -8,3 +8,6 @@ Route::get('/', function () {
 Route::post('/api/registro', [App\Http\Controllers\UserController::class, 'register']);
 Route::post('/api/acceso', [App\Http\Controllers\UserController::class, 'login']);
 Route::resource('/api/carros', App\Http\Controllers\CarController::class);
+
+
+Route::get('/api',[App\Http\Controllers\UserController::class, 'index']);
