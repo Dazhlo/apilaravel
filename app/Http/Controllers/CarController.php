@@ -3,17 +3,30 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Model\Car;
+use App\Models\Car;
+use App\Helpers\JwtAuth;
 use Illuminate\Support\Facades\Validator;
 class CarController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
-    }
+  public function index(Request $request){
+  $hash =  $request->header('Authorization', null);
+   $jwtAuth = new JwtAuth();
+   $checkToken = $jwtAuth->checkToken($hash);
+   if($checkToken){
+   	$cars = Car::all();
+   	return response()->json(array(
+      	 'cars'=>$cars,
+      	 'status'=>'success'
+   	), 200);
+  }else{
+       echo "Index de CarController No Autenticado"; die();
+   }
+
+}
+
 
     /**
      * Show the form for creating a new resource.

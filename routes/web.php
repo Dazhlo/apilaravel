@@ -12,5 +12,5 @@ Route::resource('/api/carros', 'App\Http\Controllers\CarController');
 
 Route::post('/api/registro', 'App\Http\Controllers\UserController@register');
 Route::post('/api/acceso', 'App\Http\Controllers\UserController@login');
-
+Route::get('/carros', [App\Http\Controllers\CarController::class, 'index']);
 Route::get('/api', [App\Http\Controllers\UserController::class, 'index']);

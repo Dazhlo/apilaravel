@@ -3,86 +3,81 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Model\User;
+use App\Models\User;
+use App\Helpers\JwtAuth;
+
 class UserController extends Controller
 {
-
     public function index()
     {
-        echo "Index de CarController";
-        die();
+        return response()->json([
+            'message' => 'Index de UserController'
+        ], 200);
     }
+
     public function login(Request $request)
     {
         $jwtAuth = new JwtAuth();
-        //Recibir POST
-        $json = $request->input('json', null);
-        $params = json_decode($json);
-        $email = (!is_null($json) && isset($params->email)) ? $params->email : null;
-        $password = (!is_null($json) && isset($params->password)) ? $params->password : null;
-        $getToken = (!is_null($json) && isset($params->getToken)) ? $params->getToken : null;
+        
+      
+        $email = $request->input('email');
+        $password = $request->input('password');
+        $getToken = $request->input('getToken');
 
-
-        if (!is_null($email) && !is_null($password) && ($getToken == null || $getToken == false)) {
-            $signup = $jwtAuth->signup($email, $password);
-        } elseif ($getToken != null) {
+        if (!empty($email) && !empty($password)) {
+          
             $signup = $jwtAuth->signup($email, $password, $getToken);
+            return response()->json($signup, 200);
         } else {
-            $signup = array(
+            return response()->json([
                 'status' => 'error',
-                'message' => 'Envía tus datos por post',
-            );
+                'message' => 'Envía tus datos por POST (email y password)'
+            ], 400);
         }
-        return response()->json($signup, 200);
     }
-
-
 
     public function register(Request $request)
     {
-        //Recoger el post
-        $json = $request->input('json', null);
-        $params = json_decode($json); //Permite convertir a formato de objeto de php lo que llegue
-        $email = (!is_null($json) && isset($params->email)) ? $params->email : null;
-        $name = (!is_null($json) && isset($params->name)) ? $params->name : null;
+        $name     = $request->input('name');
+        $email    = $request->input('email');
+        $password = $request->input('password');
 
+        if (!empty($name) && !empty($email) && !empty($password)) {
+            
+            
+            $isset_user = User::where('email', $email)->first();
 
-        $password = (!is_null($json) && isset($params->password)) ? $params->password : null;
-        if (!is_null($email) && !is_null($password) && !is_null($name)) {                //Crear el usuario
-            $user = new User();
-            $user->email = $email;
-            $user->name = $name;
-            $pwd = password_hash($password, PASSWORD_DEFAULT);
-            $user->password = $pwd;
-            //Comprobar usuario duplicado
-            $isset_user = User::where('email', '=', $email)->get();
-            if (count($isset_user) == 0) {
-                //Guardar el usuario
+            if (!$isset_user) {
+                $user = new User();
+                $user->name = $name;
+                $user->email = $email;
+                
+                
+              
+                $user->password = password_hash($password, PASSWORD_DEFAULT);
+                
                 $user->save();
-                $data = array(
+
+                $data = [
                     'status' => 'success',
                     'codigo' => 200,
                     'message' => 'Usuario Registrado correctamente'
-                );
+                ];
             } else {
-                //No guardarlo
-                $data = array(
+                $data = [
                     'status' => 'error',
                     'codigo' => 400,
                     'message' => 'Usuario Duplicado, no puede registrarse'
-                );
+                ];
             }
-            return response()->json($data, $data['codigo']);
         } else {
-            $data = array(
+            $data = [
                 'status' => 'error',
                 'codigo' => 400,
                 'message' => 'Usuario no Creado (Datos incompletos)'
-            );
-            return response()->json($data, $data['codigo']);
+            ];
         }
+
+        return response()->json($data, $data['codigo']);
     }
-
-
 }
-
