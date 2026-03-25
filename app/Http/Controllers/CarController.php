@@ -96,19 +96,33 @@ class CarController extends Controller
     /**
      * Display the specified resource.
      */
- public function show(string $id, Request $request)
-{
-   $hash =  $request->header('Authorization', null);
-   $jwtAuth = new JwtAuth();
-   $checkToken = $jwtAuth->checkToken($hash);
-   if($checkToken){
-       $car = Car::find($id);
-       return response()->json(array('car' => $car, 'status' => 'success'), 200);
-   }else{
-       echo "Index de CarController No Autenticado"; die();
-   }
-  
-}
+public function show($id, Request $request)
+    {
+        $hash = $request->header('Authorization', null);
+        $jwtAuth = new JwtAuth();
+        $checkToken = $jwtAuth->checkToken($hash);
+
+        if ($checkToken) {
+            $car = Car::find($id);
+
+            if (is_object($car)) {
+                return response()->json([
+                    'car' => $car,
+                    'status' => 'success'
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'El coche no existe',
+                    'status' => 'error'
+                ], 404);
+            }
+        } else {
+            return response()->json([
+                'message' => 'No autenticado',
+                'status' => 'error'
+            ], 401);
+        }
+    }
 
 
     /**
@@ -122,76 +136,91 @@ class CarController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update($id, Request $request)
+   public function update($id, Request $request)
     {
         $hash = $request->header('Authorization', null);
         $jwtAuth = new JwtAuth();
         $checkToken = $jwtAuth->checkToken($hash);
 
         if ($checkToken) {
-            //Recoger parámetros en post
+            // Recoger datos
             $json = $request->input('json', null);
-            $params = json_decode($json);
             $params_array = json_decode($json, true);
 
-            //Validar los datos
-            $validate = \Validator::make($params_array, [
-                'title' => 'required',
-                'description' => 'required',
-                'price' => 'required',
-                'status' => 'required'
-            ]);
-            if ($validate->fails()) {
-                return response()->json($validate->errors(), 400);
+            if (!empty($params_array)) {
+                // Validar datos
+                $validate = Validator::make($params_array, [
+                    'title'       => 'required',
+                    'description' => 'required',
+                    'price'       => 'required',
+                    'status'      => 'required'
+                ]);
+
+                if ($validate->fails()) {
+                    return response()->json($validate->errors(), 400);
+                }
+
+                // Quitar lo que no queremos actualizar (id y user_id por seguridad)
+                unset($params_array['id']);
+                unset($params_array['user_id']);
+                unset($params_array['created_at']);
+
+                // Actualizar el carro en la DB
+                $car = Car::where('id', $id)->update($params_array);
+
+                return response()->json([
+                    'car'    => $params_array, // Retornamos los datos actualizados
+                    'status' => 'success',
+                    'code'   => 200
+                ], 200);
+
+            } else {
+                return response()->json(['message' => 'Datos vacíos', 'status' => 'error'], 400);
             }
 
-            //Actualizar el carro
-            $car = Car::where('id', $id)->update($params_array);
-            $data = array(
-                'car' => $params,
-                'status' => 'success',
-                'codigo' => 200
-            );
         } else {
-            //Devolver un error
-            $data = array(
+            return response()->json([
                 'message' => 'Login incorrecto',
-                'status' => 'success',
-                'code' => 200
-            );
+                'status' => 'error'
+            ], 401);
         }
-        return response()->json($data, 300);
     }
 
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id, Request $request)
+   public function destroy($id, Request $request)
     {
         $hash = $request->header('Authorization', null);
         $jwtAuth = new JwtAuth();
         $checkToken = $jwtAuth->checkToken($hash);
+
         if ($checkToken) {
-            //comprobar si existe el registro
+            // Comprobar si existe el registro
             $car = Car::find($id);
 
-            //Borrarlo
-            $car->delete();
-            //Devolverlo
-            $data = array(
-                'car' => $car,
-                'status' => 'success',
-                'code' => 200
-            );
+            if (!empty($car)) {
+                $car->delete();
+                
+                return response()->json([
+                    'car'    => $car,
+                    'status' => 'success',
+                    'code'   => 200
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'El coche no existe',
+                    'status' => 'error'
+                ], 404);
+            }
+
         } else {
-            $data = array(
-                'status' => 'error',
-                'code' => '400',
+            return response()->json([
+                'status'  => 'error',
                 'message' => 'Login Incorrecto !!'
-            );
+            ], 401);
         }
-        return response()->json($data, 200);
     }
 
 }

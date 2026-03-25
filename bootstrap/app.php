@@ -11,11 +11,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->validateCsrfTokens(except: [
-            'http://localhost/api/registro',
-            'http://localhost/api/acceso',
-            'http://localhost/api/carros*'
-        ]);
+    $middleware->validateCsrfTokens(except: [
+        'api/*',
+        'api/registro',
+        'api/acceso',
+        'api/carros',
+        'api/carros/*', // El comodín ayuda para subrutas
+        'carros/crear',
+        'carros/*',
+        'api/cars/*'
+    ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
