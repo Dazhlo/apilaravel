@@ -1,20 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CarController;
+use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+// Rutas de Usuario
+Route::post('/api/registro', [UserController::class, 'register']);
+Route::post('/api/acceso', [UserController::class, 'login']);
 
-
-Route::resource('/api/carros', 'App\Http\Controllers\CarController');
-
-
-
-Route::post('/api/registro', 'App\Http\Controllers\UserController@register');
-Route::post('/api/acceso', 'App\Http\Controllers\UserController@login');
-Route::get('/carros', [App\Http\Controllers\CarController::class, 'index']);
-Route::post('/carros/crear', [App\Http\Controllers\CarController::class, 'store']);
-Route::get('/carros/update', [App\Http\Controllers\CarController::class, 'update']);
-Route::get('/api', [App\Http\Controllers\UserController::class, 'index']);
+// CRUD de Carros (Resource ya incluye GET, POST, PUT, DELETE)
+Route::resource('/api/cars', CarController::class);
