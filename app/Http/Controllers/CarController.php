@@ -96,10 +96,20 @@ class CarController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        //
-    }
+ public function show(string $id, Request $request)
+{
+   $hash =  $request->header('Authorization', null);
+   $jwtAuth = new JwtAuth();
+   $checkToken = $jwtAuth->checkToken($hash);
+   if($checkToken){
+       $car = Car::find($id);
+       return response()->json(array('car' => $car, 'status' => 'success'), 200);
+   }else{
+       echo "Index de CarController No Autenticado"; die();
+   }
+  
+}
+
 
     /**
      * Show the form for editing the specified resource.
